@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# In this configuration, the following dependent libraries are compiled:
+#
+# * zlib
+# * c-ares
+# * expat
+# * sqlite3
+# * openSSL
+# * libssh2
+
+#CHECK TOOL FOR DOWNLOAD
+ aria2c --help > /dev/null
+ if [ "$?" -eq 0 ] ; then
+   DOWNLOADER="aria2c --check-certificate=false"
+ else
+   DOWNLOADER="wget -c"
+ fi
+
+## DEPENDENCES ##
+ZLIB=http://sourceforge.net/projects/libpng/files/zlib/1.2.11/zlib-1.2.11.tar.xz
+OPENSSL=http://www.openssl.org/source/openssl-1.0.2t.tar.gz
+EXPAT=https://github.com/libexpat/libexpat/releases/download/R_2_2_6/expat-2.2.6.tar.bz2
+SQLITE3=https://sqlite.org/2019/sqlite-autoconf-3300000.tar.gz
+C_ARES=http://c-ares.haxx.se/download/c-ares-1.15.0.tar.gz
+SSH2=https://www.libssh2.org/download/libssh2-1.7.0.tar.gz
+
+ARIA2=https://github.com/aria2/aria2/archive/release-1.35.0.tar.gz
+
+## CONFIG ##
+ARCH="mips"
+HOST="mips-linux"
+PREFIX="/opt/toolchains/crosstools-mips-gcc-5.3-linux-4.1-uclibc-1.0.12-binutils-2.25-NPTL/usr/mips-buildroot-linux-uclibc/sysroot/usr"
+LOCAL_DIR="/opt/toolchains/crosstools-mips-gcc-5.3-linux-4.1-uclibc-1.0.12-binutils-2.25-NPTL/usr/mips-buildroot-linux-uclibc/sysroot/usr"
+TOOL_BIN_DIR="/opt/toolchains/crosstools-mips-gcc-5.3-linux-4.1-uclibc-1.0.12-binutils-2.25-NPTL/usr/bin"
+PATH=${TOOL_BIN_DIR}:$PATH
+
+CFLAGS="-march=mips32 -mtune=mips32"
+DEST="/opt/toolchains/crosstools-mips-gcc-5.3-linux-4.1-uclibc-1.0.12-binutils-2.25-NPTL/usr/mips-buildroot-linux-uclibc/sysroot/usr"
+CC=$HOST-gcc
+CXX=$HOST-g++
+LDFLAGS="-L$DEST/lib"
+CPPFLAGS="-I$DEST/include"
+CXXFLAGS=$CFLAGS
+MAKE="make -j`nproc`"
+CONFIGURE="./configure --prefix=${LOCAL_DIR} --host=$HOST"
+BUILD_DIRECTORY=./build-libs
+
+## 检查编译器 ##
+## Check gcc compiler ##
+#
+ echo "Checking mips-gcc ..."
+ mips-linux-gcc --version >> /dev/null
+ if [ "$?" -eq 0 ] ; then
+   sleep 2
+   echo "mips-gcc checked OK!"
+ else
+   echo "Installing mips-gcc ..."
+   sudo mkdir -p /opt/toolchains
+   sudo chmod ugo=rwx /opt/toolchains
+  #sudo chown `users` -R /opt/toolchains
+   sleep 2
+   tar xvf crosstools-mips-gcc-5.3-linux-4.1-uclibc-1.0.12-binutils-2.25-NPTL.tar.bz2 -C /opt/toolchains
+ fi
+#
+ if [ "$?" -eq 0 ] ; then
+   echo "mips-gcc installed OK!"
+   sleep 3
+ else
+ echo "mips-gcc installed failed, pls check gcc tarball!"
+ exit 0
+ fi
+
+## BUILD ##
+
+# 开始build
+# Now building
+  echo
+  echo "Now let's go building! Just wait a moment ... "
+  echo
+  sleep 5
+# 设置临时libs编译目录
+# check build directory
+  if [ ! -d build-libs ]; then
+	mkdir build-libs
+  fi
+  cd $BUILD_DIRECTORY
+#
+ # zlib build
+  if [ ! -f zlib-1.2.11.tar.xz ]; then
+  	$DOWNLOADER $ZLIB
+  fi
+  tar xf zlib-1.2.11.tar.xz
+  cd zlib-1.2.11/
+  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig LD_LIBRARY_PATH=$PREFIX/lib CC=$HOST-gcc STRIP=$HOST-strip RANLIB=$HOST-ranlib CXX=$HOST-g++ AR=$HOST-ar LD=$HOST-ld ./configure --prefix=$PREFIX 
+  $MAKE
+  make install
+  cd ..
+#
+ # expat build
+  if [ ! -f expat-2.2.6.tar.bz2 ]; then
+  	$DOWNLOADER $EXPAT
+  fi
+  tar xf expat-2.2.6.tar.bz2
+  cd expat-2.2.6/
+  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig LD_LIBRARY_PATH=$PREFIX/lib CC=$HOST-gcc CXX=$HOST-g++ ./configure --host=$HOST --build=`dpkg-architecture -qDEB_BUILD_GNU_TYPE` --prefix=$PREFIX --enable-static --enable-shared
+  $MAKE
+  make install
+  cd ..
+#
+ # c-ares build
+  if [ ! -f c-ares-1.15.0.tar.gz ]; then
+  	$DOWNLOADER $C_ARES
+  fi
+  tar xf c-ares-1.15.0.tar.gz
+  cd c-ares-1.15.0/
+  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig LD_LIBRARY_PATH=$PREFIX/lib CC=$HOST-gcc CXX=$HOST-g++ ./configure --host=$HOST --build=`dpkg-architecture -qDEB_BUILD_GNU_TYPE` --prefix=$PREFIX --enable-static --enable-shared
+  $MAKE
+  make install
+  cd ..
+#
+ # Openssl build
+  if [ ! -f openssl-1.0.2t.tar.gz ]; then
+  	$DOWNLOADER $OPENSSL
+  fi
+  tar xf openssl-1.0.2t.tar.gz
+  cd openssl-1.0.2t/
+  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig LD_LIBRARY_PATH=$PREFIX/lib CC=$HOST-gcc CXX=$HOST-g++ ./Configure linux-mips32 $CFLAGS --prefix=$PREFIX shared zlib zlib-dynamic -D_GNU_SOURCE -D_BSD_SOURCE --with-zlib-lib=$LOCAL_DIR/lib --with-zlib-include=$LOCAL_DIR/include
+  $MAKE CC=$CC
+  make CC=$CC install INSTALLTOP=$DEST OPENSSLDIR=$DEST/ssl
+  cd ..
+#
+ # sqlite3
+  if [ ! -f sqlite-autoconf-3300000.tar.gz ]; then
+  	$DOWNLOADER $SQLITE3
+  fi
+  tar xf sqlite-autoconf-3300000.tar.gz
+  cd sqlite-autoconf-3300000/
+  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig LD_LIBRARY_PATH=$PREFIX/lib CC=$HOST-gcc CXX=$HOST-g++ ./configure --host=$HOST --prefix=$PREFIX --enable-static --enable-shared --build=`dpkg-architecture -qDEB_BUILD_GNU_TYPE`
+  $MAKE
+  make install
+  cd ..
+#
+ # libssh2
+  if [ ! -f libssh2-1.7.0.tar.gz ]; then
+  	$DOWNLOADER $SSH2
+  fi
+  tar xf libssh2-1.7.0.tar.gz
+  cd libssh2-1.7.0/
+  rm -rf $PREFIX/lib/pkgconfig/libssh2.pc
+  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig LD_LIBRARY_PATH=$PREFIX/lib CC=$HOST-gcc CXX=$HOST-g++ AR=$HOST-ar RANLIB=$HOST-ranlib ./configure --host=$HOST --without-libgcrypt --with-openssl --without-wincng --prefix=$PREFIX --enable-static --enable-shared
+  $MAKE
+  make install
+  cd ..
+#
+ #cleaning
+  #rm -rf c-ares*
+  #rm -rf sqlite-autoconf*
+  #rm -rf zlib-*
+  #rm -rf expat-*
+  #rm -rf openssl-*
+  #rm -rf libssh2-*
+#
+ cd ..
+ echo "aria2 build-libs finished!   ***`date`"
+ sleep 3
+ echo
+ 
+######################
+ ## Aria2 Building ##
+######################
+
+# Now build Aria2
+  echo "Now let's go building aria2 ..."
+  echo 
+  sleep 5
+# check aria2-release tarball
+  if [ ! -f aria2-release-1.35.0.tar.gz ]; then
+  	$DOWNLOADER $ARIA2
+  fi
+  tar xf aria2-release-1.35.0.tar.gz
+  cd aria2-release-1.35.0/
+  autoreconf -i
+  ./configure --host=mips-linux --prefix=/usr --disable-nls --without-appletls --without-gnutls --without-wintls --without-libxml2 --without-libnettle --without-libgmp --without-libgcrypt --enable-static ARIA2_STATIC=yes PKG_CONFIG_PATH="$LOCAL_DIR/lib/pkgconfig" 
+  $MAKE
+  make install DESTDIR=`pwd`/../aria2
+  cd ..
+  mips-linux-strip -s aria2/usr/bin/aria2c
+  echo "Aria2 编译完成，主程序aria2c在aria2/usr/bin目录。"
+  echo "aria2 building finished!   ***`date`"
+  echo
+ 
+### 声明 ###
+### Declareration ###
+ # 
+   echo "本脚本基于GITHUB创作者q3aql的gnu-linux-arm-rbpi-config修改而来，在此向TA表示深深的敬意！谢谢！"
+   echo "This MIPS32 Aria2 auto-build scripts is based on gnu-linux-arm-rbpi-config of Github/q3aql."
+   echo "A great GREATINGS to, q3aql. You're a great Linux warrior! Thx!"
+   echo "Modified by wxalriss."
+  
