@@ -17,7 +17,7 @@ Aria2 static builds for MIPS32
 
 #### 安装教程
 
-1.  git clone https://gitee.com/logic_2050/auto-build-aria2-mips32-static.git
+1.  git clone https://github.com/wxalriss/auto-build-aria2-mips32-static.git
 2.  cd auto-build-aria2-mips32-static/
 3.  ./auto-build-aria2-mips32-static
 
