@@ -4,8 +4,8 @@
 aria2c-mips runs ok on MIPS32r1、MIPS32r2，checked for F450G_V1.0 and PT923 Home-gateway.
 
 说明：本auto-build脚本基于Github/q3aql的自动脚本修改而来，在此向q3aql致敬！
-Note: This MIPS32 Aria2 auto-build scripts is based on gnu-linux-arm-rbpi-config of Github/q3aql.
-Note: A great GREATINGS to, q3aql. You're a great Linux warrior! Thx!
+#Note: This MIPS32 Aria2 auto-build scripts is based on gnu-linux-arm-rbpi-config of Github/q3aql.
+#Note: A great GREATINGS to, q3aql. You're a great Linux warrior! Thx!
 ##
 参考：https://github.com/q3aql/aria2-static-builds
 
