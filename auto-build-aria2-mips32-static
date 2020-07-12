@@ -195,6 +195,6 @@ BUILD_DIRECTORY=./build-libs
  # 
    echo "本脚本基于GITHUB创作者q3aql的gnu-linux-arm-rbpi-config修改而来，在此向TA表示深深的敬意！谢谢！"
    echo "This MIPS32 Aria2 auto-build scripts is based on gnu-linux-arm-rbpi-config of Github/q3aql."
-   echo "A great GREATINGS to, q3aql. You're a great Linux warrior! Thx!"
+   echo "A great GREETINGS to, q3aql. You're a great Linux warrior! Thx!"
    echo "Modified by wxalriss."
   
