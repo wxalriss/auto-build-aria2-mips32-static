@@ -180,6 +180,7 @@ BUILD_DIRECTORY=./build-libs
   fi
   tar xf aria2-release-1.35.0.tar.gz
   cd aria2-release-1.35.0/
+  sudo apt-get install -y autopoint
   autoreconf -i
   ./configure --host=mips-linux --prefix=/usr --disable-nls --without-appletls --without-gnutls --without-wintls --without-libxml2 --without-libnettle --without-libgmp --without-libgcrypt --enable-static ARIA2_STATIC=yes PKG_CONFIG_PATH="$LOCAL_DIR/lib/pkgconfig" 
   $MAKE
